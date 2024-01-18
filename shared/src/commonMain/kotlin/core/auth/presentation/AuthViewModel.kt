@@ -60,4 +60,22 @@ class AuthViewModel(
         }
     }
 
+    fun loginNumber(number: String) {
+        updateState { copy(loginResponse = Loading) }
+        viewModelScope.launch {
+            repository.loginNumber(number).fold(
+                ifRight = {
+                    updateState { copy(loginResponse = Loaded(it)) }
+                }, ifLeft = {
+                    updateState {
+                        copy(
+                            snackbarError = it,
+                            loginResponse = Failed(it)
+                        )
+                    }
+                }
+            )
+        }
+    }
+
 }

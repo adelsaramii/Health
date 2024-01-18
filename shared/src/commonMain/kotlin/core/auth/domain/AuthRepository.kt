@@ -8,5 +8,6 @@ import util.helper.CommonFlow
 interface AuthRepository {
     fun isLoggedIn(): CommonFlow<Boolean>
     suspend fun loginPassword(username: String, password: String): Either<Failure, LoginDto>
+    suspend fun loginNumber(number: String): Either<Failure, LoginDto>
     suspend fun setLoggedIn(loggedIn: Boolean)
 }

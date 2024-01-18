@@ -22,13 +22,23 @@ class AuthRepositoryImpl(
         password: String
     ): Either<Failure, LoginDto> {
 
-        val result = authService.login(username, password)
+        val result = authService.loginPassword(username, password)
         result.fold(ifRight = {
             authSetting.setAccessToken(it.token)
         }, ifLeft = {})
         return result
     }
 
+    override suspend fun loginNumber(
+        number: String
+    ): Either<Failure, LoginDto> {
+
+        val result = authService.loginNumber(number)
+        result.fold(ifRight = {
+            authSetting.setAccessToken(it.token)
+        }, ifLeft = {})
+        return result
+    }
 
     override suspend fun setLoggedIn(loggedIn: Boolean) {
         authSetting.setLoggedIn(loggedIn)

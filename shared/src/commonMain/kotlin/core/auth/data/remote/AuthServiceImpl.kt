@@ -18,20 +18,36 @@ class AuthServiceImpl(
     private val authSettings: AuthSettings,
 ) : AuthService {
 
-    override suspend fun login(
+    override suspend fun loginPassword(
         username: String,
         password: String
     ): Either<Failure.NetworkFailure, LoginDto> {
         return apiClient.makeRequest(
             urlBuilder = URLBuilder(
                 authSettings.getBaseUrl().first()
-            ).apply { path("user/login") },
+            ).apply { path("user/loginPassword") },
             methodType = HttpMethod.Post
         ) {
             setBody(FormDataContent(
                 Parameters.build {
                     append("username", username)
                     append("password", password)
+                }
+            ))
+        }
+    }
+    override suspend fun loginNumber(
+        number: String,
+    ): Either<Failure.NetworkFailure, LoginDto> {
+        return apiClient.makeRequest(
+            urlBuilder = URLBuilder(
+                authSettings.getBaseUrl().first()
+            ).apply { path("user/loginNumber") },
+            methodType = HttpMethod.Post
+        ) {
+            setBody(FormDataContent(
+                Parameters.build {
+                    append("number", number)
                 }
             ))
         }
