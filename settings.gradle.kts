@@ -37,5 +37,6 @@ dependencyResolutionManagement {
         mavenCentral()
         google()
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+        maven(url = "https://download2.dynamsoft.com/maven/aar")
     }
 }
