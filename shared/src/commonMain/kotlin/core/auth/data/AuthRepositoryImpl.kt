@@ -3,6 +3,7 @@ package core.auth.data
 import arrow.core.Either
 import core.auth.data.remote.AuthService
 import core.auth.data.remote.LoginDto
+import core.auth.data.remote.SignInFormOutDto
 import core.auth.domain.AuthRepository
 import data.local.setting.AuthSettings
 import data.remote.Failure
@@ -29,18 +30,29 @@ class AuthRepositoryImpl(
         return result
     }
 
-    override suspend fun loginNumber(
-        number: String
+    override suspend fun validateCode(
+        number: String,
+        code: String
     ): Either<Failure, LoginDto> {
 
-        val result = authService.loginNumber(number)
+        val result = authService.validateCode(number , code)
         result.fold(ifRight = {
             authSetting.setAccessToken(it.token)
         }, ifLeft = {})
         return result
     }
 
+    override suspend fun sendCode(
+        number: String
+    ): Either<Failure, Unit> {
+        return  authService.sendCode(number)
+    }
+
     override suspend fun setLoggedIn(loggedIn: Boolean) {
         authSetting.setLoggedIn(loggedIn)
+    }
+
+    override suspend fun signInForm(signInFormOutDto: SignInFormOutDto): Either<Failure, Unit> {
+        return  authService.signInForm(signInFormOutDto)
     }
 }

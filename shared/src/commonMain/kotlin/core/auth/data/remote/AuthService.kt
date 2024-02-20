@@ -4,6 +4,17 @@ import arrow.core.Either
 import data.remote.Failure
 
 interface AuthService {
-    suspend fun loginPassword(username: String, password: String): Either<Failure.NetworkFailure, LoginDto>
-    suspend fun loginNumber(number: String): Either<Failure.NetworkFailure, LoginDto>
+    suspend fun loginPassword(
+        username: String,
+        password: String
+    ): Either<Failure.NetworkFailure, LoginDto>
+
+    suspend fun validateCode(
+        number: String,
+        code: String
+    ): Either<Failure.NetworkFailure, LoginDto>
+
+    suspend fun sendCode(number: String): Either<Failure.NetworkFailure, Unit>
+
+    suspend fun signInForm(signInFormOutDto: SignInFormOutDto): Either<Failure.NetworkFailure, Unit>
 }

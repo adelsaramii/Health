@@ -33,7 +33,9 @@ fun BaseScreen() {
             }
 
             BaseNavigation.Auth -> {
-                AuthScreen()
+                AuthScreen {
+                    baseRouter.replaceCurrent(BaseNavigation.Main)
+                }
             }
 
             BaseNavigation.Main -> {

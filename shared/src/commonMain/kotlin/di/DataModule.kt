@@ -28,7 +28,7 @@ val dataModule = module {
     // region service
 
     single<AuthService> {
-        AuthServiceImpl()
+        AuthServiceImpl(get() , get())
     }
 
     // endregion

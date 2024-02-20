@@ -5,11 +5,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,8 +20,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.RadioButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,7 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -43,9 +43,14 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import core.auth.data.remote.GenderEnum
+import core.auth.data.remote.SignInFormOutDto
+import data.base.Loaded
+import data.base.Loading
 import kotlinx.collections.immutable.toImmutableList
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
@@ -56,8 +61,8 @@ import util.component.LeopardTextField
 import util.component.LoadingButton
 import util.helper.Validator
 import util.helper.extractErrorMessage
+import util.helper.state
 import util.theme.black
-import util.theme.onSurface
 import util.theme.primaryColor
 import util.theme.secondary
 import util.theme.secondaryAlphaLow
@@ -67,51 +72,149 @@ import util.theme.white
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
-fun AuthScreen(viewModel: AuthViewModel = koinInject()) {
+fun AuthScreen(
+    viewModel: AuthViewModel = koinInject(),
+    navigateToMain: () -> Unit
+) {
+
+    val state by viewModel.state()
 
     val loginOrSignUp = remember {
         mutableStateOf(true) // login
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).background(white)
-            .padding(16.dp),
-    ) {
-        Image(
-            painter = painterResource("illustration_health.jpg"),
-            contentDescription = null,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(32.dp))
-        Text(
-            text = if (loginOrSignUp.value) "ورود" else "ثبت نام",
-            style = MaterialTheme.typography.h4,
-            color = black,
-            fontWeight = FontWeight.Medium
-        )
-        Spacer(Modifier.height(16.dp))
+    val signUpForm = remember {
+        mutableStateOf(false)
+    }
 
-        if (loginOrSignUp.value) {
-            LoginPage(
-                loginNumber = { number ->
-                    viewModel.loginNumber()
-                }, loginPassword = { username, password ->
-                    viewModel.loginPassword(username , password)
-                }, openSignUp = {
-                    loginOrSignUp.value = false
+    val selectedGender = remember { mutableStateOf(GenderEnum.Male) }
+
+    LaunchedEffect(state.validateCodeResponse) {
+        if (state.validateCodeResponse is Loaded) {
+            if (loginOrSignUp.value) {
+                navigateToMain()
+            } else {
+                signUpForm.value = true
+            }
+        }
+    }
+
+    LaunchedEffect(state.loginResponse) {
+        if (state.loginResponse is Loaded) {
+            navigateToMain()
+        }
+    }
+
+    LaunchedEffect(state.signInForm) {
+        if (state.signInForm is Loaded) {
+            navigateToMain()
+        }
+    }
+
+    if (!signUpForm.value) {
+        Column(
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                .background(white)
+                .padding(16.dp),
+        ) {
+            Image(
+                painter = painterResource("illustration_health.jpg"),
+                contentDescription = null,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(32.dp))
+            Text(
+                text = if (loginOrSignUp.value) "ورود" else "ثبت نام",
+                style = MaterialTheme.typography.h4,
+                color = black,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(Modifier.height(16.dp))
+
+            if (loginOrSignUp.value) {
+                LoginPage(
+                    state = state,
+                    sendCode = { number ->
+                        viewModel.sendCode(number)
+                    },
+                    validateCode = { code ->
+                        viewModel.validateCode(code)
+                    },
+                    loginPassword = { username, password ->
+                        viewModel.loginPassword(username, password)
+                    },
+                    openSignUp = {
+                        loginOrSignUp.value = false
+                    }
+                )
+            } else {
+                SignUpPage(
+                    state = state,
+                    sendCode = { number ->
+                        viewModel.sendCode(number)
+                    },
+                    validateCode = { code ->
+                        viewModel.validateCode(code)
+                    },
+                    openLogin = {
+                        loginOrSignUp.value = true
+                    },
+                )
+            }
+        }
+    } else {
+        Column(
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                .background(white)
+                .padding(16.dp),
+        ) {
+            Spacer(Modifier.height(16.dp))
+
+            Text(
+                text = "فرم ثبت نام",
+                style = MaterialTheme.typography.h4,
+                color = primaryColor,
+                fontWeight = FontWeight.Medium
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            HealthGenderRadio(
+                gender = {
+                    selectedGender.value = it
+                },
+                selectedGender
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            HealthSignUpForm(
+                title = "",
+                message = "",
+                buttonLoading = state.signInForm is Loading,
+                onLoginButtonClick = { name, nationalCode, height, age, address, password ->
+                    viewModel.signInForm(
+                        SignInFormOutDto(
+                            name = name,
+                            nationalCode = nationalCode,
+                            height = height,
+                            age = age,
+                            gender = selectedGender.value,
+                            address = address,
+                            password = password
+                        )
+                    )
                 }
             )
-        } else {
-            SignUpPage() {
-                loginOrSignUp.value = true
-            }
         }
     }
 }
 
 @Composable
 fun LoginPage(
-    loginNumber: (String) -> Unit,
+    state: AuthViewModel.State,
+    sendCode: (String) -> Unit,
+    validateCode: (String) -> Unit,
     loginPassword: (String, String) -> Unit,
     openSignUp: () -> Unit
 ) {
@@ -142,14 +245,24 @@ fun LoginPage(
 
     if (loginTypeState.value) {
         HealthUsernamePassword(
-            buttonLoading = false,
+            buttonLoading = state.loginResponse is Loaded,
             onLoginButtonClick = { username, password ->
-//                login(username, password)
+                loginPassword(username, password)
             })
     } else {
-        HealthNumber(buttonLoading = false, onLoginButtonClick = { number ->
-//                login(username, password)
-        })
+        if (state.sendCodeResponse is Loaded) {
+            HealthValidateCode(
+                buttonLoading = state.validateCodeResponse is Loading,
+                onLoginButtonClick = { code ->
+                    validateCode(code)
+                })
+        } else {
+            HealthSendCode(
+                buttonLoading = state.sendCodeResponse is Loading,
+                onLoginButtonClick = { number ->
+                    sendCode(number)
+                })
+        }
     }
 
     Text(
@@ -179,10 +292,25 @@ fun LoginPage(
 }
 
 @Composable
-fun SignUpPage(openLogin: () -> Unit) {
-    HealthNumberSignUp(buttonLoading = false, onLoginButtonClick = { number ->
-//                login(username, password)
-    })
+fun SignUpPage(
+    state: AuthViewModel.State,
+    sendCode: (String) -> Unit,
+    validateCode: (String) -> Unit,
+    openLogin: () -> Unit
+) {
+    if (state.sendCodeResponse is Loaded) {
+        HealthValidateCode(
+            buttonLoading = state.validateCodeResponse is Loading,
+            onLoginButtonClick = { code ->
+                validateCode(code)
+            })
+    } else {
+        HealthSendCode(
+            buttonLoading = state.sendCodeResponse is Loading,
+            onLoginButtonClick = { number ->
+                sendCode(number)
+            })
+    }
 
     Text(
         buildAnnotatedString {
@@ -370,7 +498,7 @@ fun HealthUsernamePassword(
     ExperimentalResourceApi::class
 )
 @Composable
-fun HealthNumber(
+fun HealthSendCode(
     buttonLoading: Boolean, onLoginButtonClick: (String) -> Unit, modifier: Modifier = Modifier
 ) {
 
@@ -380,12 +508,12 @@ fun HealthNumber(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    val userNameValidators = listOf(Validator.NotEmpty(message = "شماره موبایل خود را وارد کنید"))
-    var username by remember {
+    val numberValidators = listOf(Validator.NotEmpty(message = "شماره موبایل خود را وارد کنید"))
+    var number by remember {
         mutableStateOf("")
     }
 
-    var usernameFieldErrorString: String? by remember {
+    var numberFieldErrorString: String? by remember {
         mutableStateOf(null)
     }
 
@@ -397,7 +525,7 @@ fun HealthNumber(
         val fieldsData = listOf(
             FormTextFieldData(
                 label = "شماره موبایل",
-                value = username,
+                value = number,
                 scope = coroutineScope,
                 leadingIcon = {
                     Image(
@@ -414,14 +542,14 @@ fun HealthNumber(
                 keyboardController = keyboardController,
                 focusManager = focusManager,
                 onValueChange = {
-                    username = it
-                    if (usernameFieldErrorString?.isNotEmpty() == true) {
-                        usernameFieldErrorString =
-                            userNameValidators.extractErrorMessage(username).orEmpty()
+                    number = it
+                    if (numberFieldErrorString?.isNotEmpty() == true) {
+                        numberFieldErrorString =
+                            numberValidators.extractErrorMessage(number).orEmpty()
                     }
                 },
                 imeAction = ImeAction.Done,
-                errorDescription = usernameFieldErrorString,
+                errorDescription = numberFieldErrorString,
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Done
                 )
@@ -445,10 +573,122 @@ fun HealthNumber(
         LoadingButton(
             onClick = {
                 keyboardController?.hide()
-                usernameFieldErrorString =
-                    userNameValidators.extractErrorMessage(username).orEmpty()
-                if (usernameFieldErrorString.isNullOrEmpty()) {
-                    onLoginButtonClick(username)
+                numberFieldErrorString =
+                    numberValidators.extractErrorMessage(number).orEmpty()
+                if (numberFieldErrorString.isNullOrEmpty()) {
+                    onLoginButtonClick(number)
+                }
+            },
+            isLoading = buttonLoading,
+            colors = ButtonDefaults.buttonColors(backgroundColor = splashGradiantEndColor),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "ارسال کد", style = MaterialTheme.typography.button, color = white
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    painter = painterResource("arrow_right.xml"),
+                    contentDescription = "Login",
+                    tint = white,
+                    modifier = Modifier.rotate(180F)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+    }
+}
+
+@OptIn(
+    ExperimentalFoundationApi::class,
+    ExperimentalComposeUiApi::class,
+    ExperimentalResourceApi::class
+)
+@Composable
+fun HealthValidateCode(
+    buttonLoading: Boolean, onLoginButtonClick: (String) -> Unit, modifier: Modifier = Modifier
+) {
+
+    val focusRequester = remember { FocusRequester() }
+
+    val coroutineScope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val codeNameValidators = listOf(Validator.NotEmpty(message = "کد پیامک شده را وارد کنید"))
+    var code by remember {
+        mutableStateOf("")
+    }
+
+    var codeFieldErrorString: String? by remember {
+        mutableStateOf(null)
+    }
+
+
+    Column(
+        modifier = modifier.fillMaxWidth()
+    ) {
+
+        val fieldsData = listOf(
+            FormTextFieldData(
+                label = "کد ارسال شده",
+                value = code,
+                scope = coroutineScope,
+                leadingIcon = {
+                    Image(
+                        painter = painterResource("user.xml"),
+                        "Person Icon",
+                        colorFilter = ColorFilter.tint(textColor)
+                    )
+                },
+                onKeyboardNextClicked = {
+                    focusRequester.requestFocus()
+                },
+                onKeyboardDoneClicked = {},
+                focusRequester = focusRequester,
+                keyboardController = keyboardController,
+                focusManager = focusManager,
+                onValueChange = {
+                    code = it
+                    if (codeFieldErrorString?.isNotEmpty() == true) {
+                        codeFieldErrorString =
+                            codeNameValidators.extractErrorMessage(code).orEmpty()
+                    }
+                },
+                imeAction = ImeAction.Done,
+                errorDescription = codeFieldErrorString,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done
+                )
+            )
+        )
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Form(
+                fields = fieldsData.toImmutableList(), modifier = Modifier.fillMaxWidth()
+            ) { data ->
+                LeopardTextField(
+                    data, modifier = Modifier.fillMaxWidth()
+                )
+            }
+            Spacer(modifier = Modifier.height(32.dp))
+
+        }
+        LoadingButton(
+            onClick = {
+                keyboardController?.hide()
+                codeFieldErrorString =
+                    codeNameValidators.extractErrorMessage(code).orEmpty()
+                if (codeFieldErrorString.isNullOrEmpty()) {
+                    onLoginButtonClick(code)
                 }
             },
             isLoading = buttonLoading,
@@ -482,8 +722,12 @@ fun HealthNumber(
     ExperimentalResourceApi::class
 )
 @Composable
-fun HealthNumberSignUp(
-    buttonLoading: Boolean, onLoginButtonClick: (String) -> Unit, modifier: Modifier = Modifier
+fun HealthSignUpForm(
+    title: String,
+    message: String,
+    buttonLoading: Boolean,
+    onLoginButtonClick: (String, String, Int, Int, String, String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
 
     val focusRequester = remember { FocusRequester() }
@@ -492,15 +736,53 @@ fun HealthNumberSignUp(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    val userNameValidators = listOf(Validator.NotEmpty(message = "شماره موبایل خود را وارد کنید"))
-    var username by remember {
+    val nameValidators = listOf(Validator.NotEmpty(message = message))
+    var name by remember {
         mutableStateOf("")
     }
-
-    var usernameFieldErrorString: String? by remember {
+    var nameErrorString: String? by remember {
         mutableStateOf(null)
     }
 
+    val nationalCodeValidators = listOf(Validator.NotEmpty(message = message))
+    var nationalCode by remember {
+        mutableStateOf("")
+    }
+    var nationalCodeErrorString: String? by remember {
+        mutableStateOf(null)
+    }
+
+    val heightValidators = listOf(Validator.NotEmpty(message = message))
+    var height by remember {
+        mutableStateOf("")
+    }
+    var heightErrorString: String? by remember {
+        mutableStateOf(null)
+    }
+
+    val ageValidators = listOf(Validator.NotEmpty(message = message))
+    var age by remember {
+        mutableStateOf("")
+    }
+    var ageErrorString: String? by remember {
+        mutableStateOf(null)
+    }
+
+    val addressValidators = listOf(Validator.NotEmpty(message = message))
+    var address by remember {
+        mutableStateOf("")
+    }
+    var addressErrorString: String? by remember {
+        mutableStateOf(null)
+    }
+
+    val passwordValidators = listOf(Validator.NotEmpty(message = message))
+    var password by remember {
+        mutableStateOf("")
+    }
+    var passwordErrorString: String? by remember {
+        mutableStateOf(null)
+    }
 
     Column(
         modifier = modifier.fillMaxWidth()
@@ -508,8 +790,8 @@ fun HealthNumberSignUp(
 
         val fieldsData = listOf(
             FormTextFieldData(
-                label = "شماره موبایل",
-                value = username,
+                label = "نام و نام خانوادگی",
+                value = name,
                 scope = coroutineScope,
                 leadingIcon = {
                     Image(
@@ -522,18 +804,176 @@ fun HealthNumberSignUp(
                     focusRequester.requestFocus()
                 },
                 onKeyboardDoneClicked = {},
-                keyboardController = keyboardController,
                 focusRequester = focusRequester,
+                keyboardController = keyboardController,
                 focusManager = focusManager,
                 onValueChange = {
-                    username = it
-                    if (usernameFieldErrorString?.isNotEmpty() == true) {
-                        usernameFieldErrorString =
-                            userNameValidators.extractErrorMessage(username).orEmpty()
+                    name = it
+                    if (nameErrorString?.isNotEmpty() == true) {
+                        nameErrorString =
+                            nameValidators.extractErrorMessage(name).orEmpty()
                     }
                 },
                 imeAction = ImeAction.Done,
-                errorDescription = usernameFieldErrorString,
+                errorDescription = nameErrorString,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done
+                )
+            ),
+            FormTextFieldData(
+                label = "کد ملی",
+                value = nationalCode,
+                scope = coroutineScope,
+                leadingIcon = {
+                    Image(
+                        painter = painterResource("user.xml"),
+                        "Person Icon",
+                        colorFilter = ColorFilter.tint(textColor)
+                    )
+                },
+                onKeyboardNextClicked = {
+                    focusRequester.requestFocus()
+                },
+                onKeyboardDoneClicked = {},
+                focusRequester = focusRequester,
+                keyboardController = keyboardController,
+                focusManager = focusManager,
+                onValueChange = {
+                    nationalCode = it
+                    if (nationalCodeErrorString?.isNotEmpty() == true) {
+                        nationalCodeErrorString =
+                            nationalCodeValidators.extractErrorMessage(nationalCode).orEmpty()
+                    }
+                },
+                imeAction = ImeAction.Done,
+                errorDescription = nationalCodeErrorString,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    keyboardType = KeyboardType.Number
+                )
+            ),
+            FormTextFieldData(
+                label = "قد",
+                value = height,
+                scope = coroutineScope,
+                leadingIcon = {
+                    Image(
+                        painter = painterResource("user.xml"),
+                        "Person Icon",
+                        colorFilter = ColorFilter.tint(textColor)
+                    )
+                },
+                onKeyboardNextClicked = {
+                    focusRequester.requestFocus()
+                },
+                onKeyboardDoneClicked = {},
+                focusRequester = focusRequester,
+                keyboardController = keyboardController,
+                focusManager = focusManager,
+                onValueChange = {
+                    height = it
+                    if (heightErrorString?.isNotEmpty() == true) {
+                        heightErrorString =
+                            heightValidators.extractErrorMessage(height).orEmpty()
+                    }
+                },
+                imeAction = ImeAction.Done,
+                errorDescription = heightErrorString,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    keyboardType = KeyboardType.Number
+                )
+            ),
+            FormTextFieldData(
+                label = "سن",
+                value = age,
+                scope = coroutineScope,
+                leadingIcon = {
+                    Image(
+                        painter = painterResource("user.xml"),
+                        "Person Icon",
+                        colorFilter = ColorFilter.tint(textColor)
+                    )
+                },
+                onKeyboardNextClicked = {
+                    focusRequester.requestFocus()
+                },
+                onKeyboardDoneClicked = {},
+                focusRequester = focusRequester,
+                keyboardController = keyboardController,
+                focusManager = focusManager,
+                onValueChange = {
+                    age = it
+                    if (ageErrorString?.isNotEmpty() == true) {
+                        ageErrorString =
+                            ageValidators.extractErrorMessage(age).orEmpty()
+                    }
+                },
+                imeAction = ImeAction.Done,
+                errorDescription = ageErrorString,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    keyboardType = KeyboardType.Number
+                )
+            ),
+            FormTextFieldData(
+                label = "آدرس",
+                value = address,
+                scope = coroutineScope,
+                leadingIcon = {
+                    Image(
+                        painter = painterResource("user.xml"),
+                        "Person Icon",
+                        colorFilter = ColorFilter.tint(textColor)
+                    )
+                },
+                onKeyboardNextClicked = {
+                    focusRequester.requestFocus()
+                },
+                onKeyboardDoneClicked = {},
+                focusRequester = focusRequester,
+                keyboardController = keyboardController,
+                focusManager = focusManager,
+                onValueChange = {
+                    address = it
+                    if (addressErrorString?.isNotEmpty() == true) {
+                        addressErrorString =
+                            addressValidators.extractErrorMessage(address).orEmpty()
+                    }
+                },
+                imeAction = ImeAction.Done,
+                errorDescription = addressErrorString,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done
+                )
+            ),
+            FormTextFieldData(
+                label = "پسوورد",
+                value = password,
+                scope = coroutineScope,
+                leadingIcon = {
+                    Image(
+                        painter = painterResource("user.xml"),
+                        "Person Icon",
+                        colorFilter = ColorFilter.tint(textColor)
+                    )
+                },
+                onKeyboardNextClicked = {
+                    focusRequester.requestFocus()
+                },
+                onKeyboardDoneClicked = {},
+                focusRequester = focusRequester,
+                keyboardController = keyboardController,
+                focusManager = focusManager,
+                onValueChange = {
+                    password = it
+                    if (passwordErrorString?.isNotEmpty() == true) {
+                        passwordErrorString =
+                            passwordValidators.extractErrorMessage(password).orEmpty()
+                    }
+                },
+                imeAction = ImeAction.Done,
+                errorDescription = passwordErrorString,
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Done
                 )
@@ -557,11 +997,28 @@ fun HealthNumberSignUp(
         LoadingButton(
             onClick = {
                 keyboardController?.hide()
-                usernameFieldErrorString =
-                    userNameValidators.extractErrorMessage(username).orEmpty()
-                if (usernameFieldErrorString.isNullOrEmpty()) {
-                    onLoginButtonClick(username)
+                nameErrorString =
+                    nameValidators.extractErrorMessage(name).orEmpty()
+                heightErrorString =
+                    heightValidators.extractErrorMessage(height).orEmpty()
+                addressErrorString =
+                    addressValidators.extractErrorMessage(address).orEmpty()
+                passwordErrorString =
+                    passwordValidators.extractErrorMessage(password).orEmpty()
+                ageErrorString =
+                    ageValidators.extractErrorMessage(age).orEmpty()
+
+                if (nameErrorString.isNullOrEmpty() && ageErrorString.isNullOrEmpty() && passwordErrorString.isNullOrEmpty() && addressErrorString.isNullOrEmpty() && heightErrorString.isNullOrEmpty()) {
+                    onLoginButtonClick(
+                        name,
+                        nationalCode,
+                        height.toInt(),
+                        age.toInt(),
+                        address,
+                        password
+                    )
                 }
+
             },
             isLoading = buttonLoading,
             colors = ButtonDefaults.buttonColors(backgroundColor = splashGradiantEndColor),
@@ -585,5 +1042,27 @@ fun HealthNumberSignUp(
         }
         Spacer(modifier = Modifier.height(16.dp))
 
+    }
+}
+
+@Composable
+fun HealthGenderRadio(gender: (GenderEnum) -> Unit, selectedGender: State<GenderEnum>) {
+
+    Column {
+        RadioButton(
+            selected = selectedGender.value == GenderEnum.Male,
+            onClick = {
+                gender(GenderEnum.Male)
+            }
+        )
+        Text("مرد")
+
+        RadioButton(
+            selected = selectedGender.value == GenderEnum.Female,
+            onClick = {
+                gender(GenderEnum.Female)
+            }
+        )
+        Text("زن")
     }
 }

@@ -2,6 +2,7 @@ package core.auth.presentation
 
 import com.attendace.leopard.data.base.BaseViewModel
 import core.auth.data.remote.LoginDto
+import core.auth.data.remote.SignInFormOutDto
 import core.auth.domain.AuthRepository
 import data.base.Failed
 import data.base.LoadableData
@@ -20,7 +21,11 @@ class AuthViewModel(
 
     data class State(
         val isLogin: Boolean? = null,
-        val loginResponse: LoadableData<LoginDto> = NotLoaded,
+        val number: String = "",
+        val loginResponse: LoadableData<Unit> = NotLoaded,
+        val sendCodeResponse: LoadableData<Unit> = NotLoaded,
+        val validateCodeResponse: LoadableData<Unit> = NotLoaded,
+        val signInForm: LoadableData<Unit> = NotLoaded,
         val snackbarError: Failure? = null
     )
 
@@ -47,7 +52,7 @@ class AuthViewModel(
         viewModelScope.launch {
             repository.loginPassword(username, password).fold(
                 ifRight = {
-                    updateState { copy(loginResponse = Loaded(it)) }
+                    updateState { copy(loginResponse = Loaded(Unit)) }
                 }, ifLeft = {
                     updateState {
                         copy(
@@ -60,17 +65,58 @@ class AuthViewModel(
         }
     }
 
-    fun loginNumber(number: String) {
-        updateState { copy(loginResponse = Loading) }
+    fun sendCode(number: String) {
+        updateState { copy(sendCodeResponse = Loading) }
         viewModelScope.launch {
-            repository.loginNumber(number).fold(
+            repository.sendCode(number).fold(
                 ifRight = {
-                    updateState { copy(loginResponse = Loaded(it)) }
+                    updateState {
+                        copy(
+                            number = number,
+                            sendCodeResponse = Loaded(Unit)
+                        )
+                    }
                 }, ifLeft = {
                     updateState {
                         copy(
                             snackbarError = it,
-                            loginResponse = Failed(it)
+                            sendCodeResponse = Failed(it)
+                        )
+                    }
+                }
+            )
+        }
+    }
+
+    fun validateCode(code: String) {
+        updateState { copy(validateCodeResponse = Loading) }
+        viewModelScope.launch {
+            repository.validateCode(currentState.number, code).fold(
+                ifRight = {
+                    updateState { copy(validateCodeResponse = Loaded(Unit)) }
+                }, ifLeft = {
+                    updateState {
+                        copy(
+                            snackbarError = it,
+                            validateCodeResponse = Failed(it)
+                        )
+                    }
+                }
+            )
+        }
+    }
+
+    fun signInForm(signInFormOutDto: SignInFormOutDto) {
+        updateState { copy(signInForm = Loading) }
+        viewModelScope.launch {
+            repository.signInForm(signInFormOutDto).fold(
+                ifRight = {
+                    updateState { copy(signInForm = Loaded(Unit)) }
+                }, ifLeft = {
+                    updateState {
+                        copy(
+                            snackbarError = it,
+                            signInForm = Failed(it)
                         )
                     }
                 }

@@ -12,6 +12,7 @@ import io.ktor.http.Parameters
 import io.ktor.http.URLBuilder
 import io.ktor.http.path
 import kotlinx.coroutines.flow.first
+import kotlinx.serialization.json.Json
 
 class AuthServiceImpl(
     private val apiClient: ApiClient,
@@ -25,31 +26,48 @@ class AuthServiceImpl(
         return apiClient.makeRequest(
             urlBuilder = URLBuilder(
                 authSettings.getBaseUrl().first()
-            ).apply { path("user/loginPassword") },
+            ).apply { path("api/user/login") },
             methodType = HttpMethod.Post
         ) {
-            setBody(FormDataContent(
-                Parameters.build {
-                    append("username", username)
-                    append("password", password)
-                }
-            ))
+            setBody(Json.encodeToString(LoginPasswordOutDto.serializer(), LoginPasswordOutDto(username , password)))
         }
     }
-    override suspend fun loginNumber(
+
+    override suspend fun validateCode(
         number: String,
+        code: String
     ): Either<Failure.NetworkFailure, LoginDto> {
         return apiClient.makeRequest(
             urlBuilder = URLBuilder(
                 authSettings.getBaseUrl().first()
-            ).apply { path("user/loginNumber") },
+            ).apply { path("api/auth/validateCode") },
             methodType = HttpMethod.Post
         ) {
-            setBody(FormDataContent(
-                Parameters.build {
-                    append("number", number)
-                }
-            ))
+            setBody(Json.encodeToString(ValidateCodeOutDto.serializer(), ValidateCodeOutDto(number , code)))
+        }
+    }
+
+    override suspend fun sendCode(
+        number: String,
+    ): Either<Failure.NetworkFailure, Unit> {
+        return apiClient.makeRequest(
+            urlBuilder = URLBuilder(
+                authSettings.getBaseUrl().first()
+            ).apply { path("api/auth/sendCode") },
+            methodType = HttpMethod.Post
+        ) {
+            setBody(Json.encodeToString(LoginNumberOutDto.serializer(), LoginNumberOutDto(number)))
+        }
+    }
+
+    override suspend fun signInForm(signInFormOutDto: SignInFormOutDto): Either<Failure.NetworkFailure, Unit> {
+        return apiClient.makeRequest(
+            urlBuilder = URLBuilder(
+                authSettings.getBaseUrl().first()
+            ).apply { path("api/user/edit") },
+            methodType = HttpMethod.Put
+        ) {
+            setBody(Json.encodeToString(SignInFormOutDto.serializer(), signInFormOutDto))
         }
     }
 

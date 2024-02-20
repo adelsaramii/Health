@@ -104,7 +104,7 @@ class AuthSettingsImpl  @OptIn(ExperimentalSettingsApi::class) constructor(
     }
 
     override fun getBaseUrl(): Flow<String> {
-        return settings.getStringFlow(BASE_URL, "182.105.239.123:8080/api")
+        return settings.getStringFlow(BASE_URL, "http://192.168.50.108:8080/")
     }
 
     private companion object {
