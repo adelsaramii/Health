@@ -22,6 +22,10 @@ import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.RadioButton
 import androidx.compose.material.Text
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -63,7 +67,9 @@ import util.helper.Validator
 import util.helper.extractErrorMessage
 import util.helper.state
 import util.theme.black
+import util.theme.neutralLight0Dark10
 import util.theme.primaryColor
+import util.theme.red
 import util.theme.secondary
 import util.theme.secondaryAlphaLow
 import util.theme.splashGradiantEndColor
@@ -78,6 +84,10 @@ fun AuthScreen(
 ) {
 
     val state by viewModel.state()
+
+    val snackBarHostState = remember {
+        SnackbarHostState()
+    }
 
     val loginOrSignUp = remember {
         mutableStateOf(true) // login
@@ -99,6 +109,12 @@ fun AuthScreen(
         }
     }
 
+    LaunchedEffect(state.snackbarError) {
+        state.snackbarError?.let {
+            snackBarHostState.showSnackbar("An Error Occurred")
+        }
+    }
+
     LaunchedEffect(state.loginResponse) {
         if (state.loginResponse is Loaded) {
             navigateToMain()
@@ -111,101 +127,116 @@ fun AuthScreen(
         }
     }
 
-    if (!signUpForm.value) {
-        Column(
-            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-                .background(white)
-                .padding(16.dp),
-        ) {
-            Image(
-                painter = painterResource("illustration_health.jpg"),
-                contentDescription = null,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(32.dp))
-            Text(
-                text = if (loginOrSignUp.value) "ورود" else "ثبت نام",
-                style = MaterialTheme.typography.h4,
-                color = black,
-                fontWeight = FontWeight.Medium
-            )
-            Spacer(Modifier.height(16.dp))
-
-            if (loginOrSignUp.value) {
-                LoginPage(
-                    state = state,
-                    sendCode = { number ->
-                        viewModel.sendCode(number)
-                    },
-                    validateCode = { code ->
-                        viewModel.validateCode(code)
-                    },
-                    loginPassword = { username, password ->
-                        viewModel.loginPassword(username, password)
-                    },
-                    openSignUp = {
-                        loginOrSignUp.value = false
-                    }
-                )
-            } else {
-                SignUpPage(
-                    state = state,
-                    sendCode = { number ->
-                        viewModel.sendCode(number)
-                    },
-                    validateCode = { code ->
-                        viewModel.validateCode(code)
-                    },
-                    openLogin = {
-                        loginOrSignUp.value = true
-                    },
+    Scaffold(
+        Modifier
+            .fillMaxSize()
+            .background(white),
+        snackbarHost = {
+            SnackbarHost(snackBarHostState) { data ->
+                Snackbar(
+                    containerColor = red,
+                    contentColor = neutralLight0Dark10,
+                    snackbarData = data
                 )
             }
-        }
-    } else {
-        Column(
-            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-                .background(white)
-                .padding(16.dp),
-        ) {
-            Spacer(Modifier.height(16.dp))
+        },
+    ) {
+        if (!signUpForm.value) {
+            Column(
+                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                    .background(white)
+                    .padding(16.dp),
+            ) {
+                Image(
+                    painter = painterResource("illustration_health.jpg"),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(32.dp))
+                Text(
+                    text = if (loginOrSignUp.value) "ورود" else "ثبت نام",
+                    style = MaterialTheme.typography.h4,
+                    color = black,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(Modifier.height(16.dp))
 
-            Text(
-                text = "فرم ثبت نام",
-                style = MaterialTheme.typography.h4,
-                color = primaryColor,
-                fontWeight = FontWeight.Medium
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            HealthGenderRadio(
-                gender = {
-                    selectedGender.value = it
-                },
-                selectedGender
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            HealthSignUpForm(
-                title = "",
-                message = "",
-                buttonLoading = state.signInForm is Loading,
-                onLoginButtonClick = { name, nationalCode, height, age, address, password ->
-                    viewModel.signInForm(
-                        SignInFormOutDto(
-                            name = name,
-                            nationalCode = nationalCode,
-                            height = height,
-                            age = age,
-                            gender = selectedGender.value,
-                            address = address,
-                            password = password
-                        )
+                if (loginOrSignUp.value) {
+                    LoginPage(
+                        state = state,
+                        sendCode = { number ->
+                            viewModel.sendCode(number)
+                        },
+                        validateCode = { code ->
+                            viewModel.validateCode(code)
+                        },
+                        loginPassword = { username, password ->
+                            viewModel.loginPassword(username, password)
+                        },
+                        openSignUp = {
+                            loginOrSignUp.value = false
+                        }
+                    )
+                } else {
+                    SignUpPage(
+                        state = state,
+                        sendCode = { number ->
+                            viewModel.sendCode(number)
+                        },
+                        validateCode = { code ->
+                            viewModel.validateCode(code)
+                        },
+                        openLogin = {
+                            loginOrSignUp.value = true
+                        },
                     )
                 }
-            )
+            }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                    .background(white)
+                    .padding(16.dp),
+            ) {
+                Spacer(Modifier.height(16.dp))
+
+                Text(
+                    text = "فرم ثبت نام",
+                    style = MaterialTheme.typography.h4,
+                    color = primaryColor,
+                    fontWeight = FontWeight.Medium
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                HealthGenderRadio(
+                    gender = {
+                        selectedGender.value = it
+                    },
+                    selectedGender
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                HealthSignUpForm(
+                    title = "",
+                    message = "",
+                    buttonLoading = state.signInForm is Loading,
+                    onLoginButtonClick = { name, nationalCode, height, age, address, password ->
+                        viewModel.signInForm(
+                            SignInFormOutDto(
+                                name = name,
+                                nationalCode = nationalCode,
+                                height = height,
+                                age = age,
+                                gender = selectedGender.value,
+                                address = address,
+                                password = password
+                            )
+                        )
+                    }
+                )
+            }
         }
     }
 }

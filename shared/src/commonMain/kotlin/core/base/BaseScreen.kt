@@ -5,6 +5,7 @@ import com.arkivanov.decompose.router.stack.replaceCurrent
 import com.arkivanov.essenty.parcelable.Parcelable
 import com.arkivanov.essenty.parcelable.Parcelize
 import core.auth.presentation.AuthScreen
+import core.main.MainScreen
 import core.splash.SplashScreen
 import io.github.xxfast.decompose.router.Router
 import io.github.xxfast.decompose.router.content.RoutedContent
@@ -16,7 +17,7 @@ fun BaseScreen() {
         rememberRouter(BaseNavigation::class, stack = listOf(BaseNavigation.Splash))
 
     val mainChild: Router<MainNavigation> =
-        rememberRouter(MainNavigation::class, stack = listOf(MainNavigation.HealthInfo))
+        rememberRouter(MainNavigation::class, stack = listOf(MainNavigation.Home))
 
     RoutedContent(
         router = baseRouter,
@@ -39,7 +40,7 @@ fun BaseScreen() {
             }
 
             BaseNavigation.Main -> {
-
+                MainScreen()
             }
         }
     }
@@ -55,5 +56,5 @@ sealed class BaseNavigation : Parcelable {
 @Parcelize
 sealed class MainNavigation : Parcelable {
     object Profile : MainNavigation()
-    object HealthInfo : MainNavigation()
+    object Home : MainNavigation()
 }
