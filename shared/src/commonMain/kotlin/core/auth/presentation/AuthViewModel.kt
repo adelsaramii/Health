@@ -52,6 +52,7 @@ class AuthViewModel(
         viewModelScope.launch {
             repository.loginPassword(username, password).fold(
                 ifRight = {
+                    repository.setLoggedIn(true)
                     updateState { copy(loginResponse = Loaded(Unit)) }
                 }, ifLeft = {
                     updateState {
@@ -93,6 +94,7 @@ class AuthViewModel(
         viewModelScope.launch {
             repository.validateCode(currentState.number, code).fold(
                 ifRight = {
+                    repository.setLoggedIn(true)
                     updateState { copy(validateCodeResponse = Loaded(Unit)) }
                 }, ifLeft = {
                     updateState {

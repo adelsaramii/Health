@@ -32,8 +32,6 @@ kotlin {
                 implementation(compose.material)
                 implementation(compose.material3)
                 implementation(compose.materialIconsExtended)
-//                implementation("androidx.compose.runtime:runtime-tracing:1.0.0-alpha03")
-//                runtimeOnly("androidx.compose.material:material-icons-core:1.6.0-alpha06")
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 implementation(compose.components.resources)
 
@@ -71,21 +69,6 @@ kotlin {
 
                 api("dev.icerock.moko:mvvm-core:0.16.1") // only ViewModel, EventsDispatcher, Dispatchers.UI
                 api("dev.icerock.moko:mvvm-compose:0.16.1") // api mvvm-core, getViewModel for Compose Multiplatfrom
-
-                // endregion
-
-                // region Accompanist
-
-                val accompanist = "0.33.1-alpha"
-
-//                implementation("com.google.accompanist:accompanist-insets:${accompanist}")
-                implementation("com.google.accompanist:accompanist-systemuicontroller:${accompanist}")
-//                implementation("com.google.accompanist:accompanist-pager:${accompanist}")
-//                implementation("com.google.accompanist:accompanist-swiperefresh:${accompanist}")
-//                implementation("com.google.accompanist:accompanist-pager-indicators:${accompanist}")
-//                implementation("com.google.accompanist:accompanist-navigation-material:${accompanist}")
-//                implementation("com.google.accompanist:accompanist-navigation-animation:${accompanist}")
-//                implementation("com.google.accompanist:accompanist-permissions:${accompanist}")
 
                 // endregion
 
@@ -142,7 +125,9 @@ kotlin {
 
                 implementation("dev.icerock.moko:geo-compose:0.6.0")
 
-//                implementation("dev.materii.pullrefresh:pullrefresh:1.1.0")
+                implementation("io.github.thechance101:chart:Beta-0.0.5")
+
+
             }
         }
         val androidMain by getting {

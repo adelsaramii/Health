@@ -55,6 +55,7 @@ fun SplashScreen(
             modifier = Modifier
                 .size(300.dp)
         )
+
         Spacer(modifier = Modifier.height(120.dp))
 
         Text(

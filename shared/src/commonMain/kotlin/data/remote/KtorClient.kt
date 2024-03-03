@@ -38,9 +38,9 @@ class ApiClient(
             })
         }
         install(HttpTimeout) {
-            socketTimeoutMillis = 10000
-            requestTimeoutMillis = 10000
-            connectTimeoutMillis = 10000
+            socketTimeoutMillis = 20000
+            requestTimeoutMillis = 20000
+            connectTimeoutMillis = 20000
         }
 
         install(Logging) {

@@ -82,7 +82,6 @@ fun AuthScreen(
     viewModel: AuthViewModel = koinInject(),
     navigateToMain: () -> Unit
 ) {
-
     val state by viewModel.state()
 
     val snackBarHostState = remember {
@@ -109,12 +108,6 @@ fun AuthScreen(
         }
     }
 
-    LaunchedEffect(state.snackbarError) {
-        state.snackbarError?.let {
-            snackBarHostState.showSnackbar("An Error Occurred")
-        }
-    }
-
     LaunchedEffect(state.loginResponse) {
         if (state.loginResponse is Loaded) {
             navigateToMain()
@@ -124,6 +117,12 @@ fun AuthScreen(
     LaunchedEffect(state.signInForm) {
         if (state.signInForm is Loaded) {
             navigateToMain()
+        }
+    }
+
+    LaunchedEffect(state.snackbarError) {
+        state.snackbarError?.let {
+            snackBarHostState.showSnackbar("An Error Occurred")
         }
     }
 

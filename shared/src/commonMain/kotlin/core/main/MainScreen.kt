@@ -26,11 +26,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.arkivanov.decompose.router.stack.replaceCurrent
+import core.auth.presentation.AuthScreen
+import core.base.BaseNavigation
 import core.base.MainNavigation
+import core.main.home.HomeScreen
+import core.main.profile.ProfileScreen
+import core.splash.SplashScreen
 import io.github.xxfast.decompose.router.Router
+import io.github.xxfast.decompose.router.content.RoutedContent
 import io.github.xxfast.decompose.router.rememberRouter
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
+import util.theme.primary
+import util.theme.white
 
 
 @Composable
@@ -40,32 +49,54 @@ fun MainScreen() {
         rememberRouter(MainNavigation::class, stack = listOf(MainNavigation.Home))
 
     val currentDestination = remember {
-        mutableStateOf(MainNavigation.Home)
+        mutableStateOf<MainNavigation>(MainNavigation.Home)
     }
 
+    Box(modifier = Modifier.fillMaxSize()) {
 
-    Column(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(white).align(Alignment.TopCenter)
+                .padding(bottom = 72.dp)
+        ) {
+            RoutedContent(
+                router = router,
+            ) { screen ->
+                when (screen) {
+                    MainNavigation.Home -> {
+                        currentDestination.value = MainNavigation.Home
+                        HomeScreen()
+                    }
 
-        Box(modifier = Modifier.fillMaxSize().background(Color.Gray)) {
-
+                    MainNavigation.Profile -> {
+                        currentDestination.value = MainNavigation.Profile
+                        ProfileScreen()
+                    }
+                }
+            }
         }
 
         Row(
             modifier = Modifier
-                .padding(start = 10.dp, end = 10.dp, top = 24.dp, bottom = 24.dp)
-                .background(Color.Transparent)
-                .fillMaxWidth(),
+                .background(white)
+                .padding(top = 24.dp, bottom = 24.dp)
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(56.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AddItem(
+            bottomNavigation(
                 destination = MainNavigation.Home,
-                currentDestination = currentDestination.value,
-            )
-            AddItem(
+                currentDestination = currentDestination.value
+            ) {
+                router.replaceCurrent(MainNavigation.Home)
+            }
+            bottomNavigation(
                 destination = MainNavigation.Profile,
-                currentDestination = currentDestination.value,
-            )
+                currentDestination = currentDestination.value
+            ) {
+                router.replaceCurrent(MainNavigation.Profile)
+            }
         }
     }
 
@@ -73,9 +104,10 @@ fun MainScreen() {
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
-fun AddItem(
+fun bottomNavigation(
     destination: MainNavigation,
     currentDestination: MainNavigation?,
+    onClick: () -> Unit
 ) {
     val selected = destination == currentDestination
 
@@ -83,20 +115,20 @@ fun AddItem(
         if (selected) MaterialTheme.colors.primary.copy(alpha = 0.6f) else Color.Transparent
 
     val contentColor =
-        if (selected) Color.White else Color.Black
+        if (selected) Color.White else primary
 
     Box(
         modifier = Modifier
-            .height(40.dp)
+            .height(44.dp)
             .clip(CircleShape)
             .background(background)
             .clickable(onClick = {
-
+                onClick()
             })
     ) {
         Row(
             modifier = Modifier
-                .padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 8.dp),
+                .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
@@ -109,11 +141,10 @@ fun AddItem(
                 tint = contentColor
             )
             AnimatedVisibility(visible = selected) {
-                Spacer(Modifier.width(4.dp))
-
                 Text(
-                    text = if (destination == MainNavigation.Home) "Home" else "Profile",
-                    color = contentColor
+                    text = if (destination == MainNavigation.Home) "خانه" else "پروفایل",
+                    color = contentColor,
+                    modifier = Modifier.padding(start = 8.dp)
                 )
             }
         }
