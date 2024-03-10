@@ -4,6 +4,8 @@ import com.russhwolf.settings.ExperimentalSettingsApi
 import com.squareup.sqldelight.db.SqlDriver
 import core.auth.data.remote.AuthService
 import core.auth.data.remote.AuthServiceImpl
+import core.main.home.data.remote.HomeService
+import core.main.home.data.remote.HomeServiceImpl
 import data.local.setting.AuthSettings
 import data.local.setting.AuthSettingsImpl
 import data.remote.ApiClient
@@ -29,6 +31,10 @@ val dataModule = module {
 
     single<AuthService> {
         AuthServiceImpl(get() , get())
+    }
+
+    single<HomeService> {
+        HomeServiceImpl(get() , get())
     }
 
     // endregion

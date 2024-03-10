@@ -17,6 +17,8 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,21 +31,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.aay.compose.barChart.BarChart
 import com.aay.compose.barChart.model.BarParameters
-import com.aay.compose.baseComponents.model.GridOrientation
 import com.aay.compose.baseComponents.model.LegendPosition
-import com.aay.compose.lineChart.LineChart
-import com.aay.compose.lineChart.model.LineParameters
-import com.aay.compose.lineChart.model.LineType
+import com.aay.compose.donutChart.model.ChartTypes
+import core.auth.presentation.AuthViewModel
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.koinInject
 import util.component.NeverOverScroll
+import util.helper.state
 import util.theme.primary
 import util.theme.textColor
 import util.theme.white
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(viewModel: HomeViewModel = koinInject()) {
+
+    val state = viewModel.state()
+
+    val healthChartInfoType = remember {
+        mutableStateOf(HealthInfoTypeEnum.BloodPressure)
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
 
@@ -93,109 +101,85 @@ fun HomeScreen() {
             HealthInfoHeaderItem("دمای بدن", false)
         }
 
-        core.main.home.BarChart()
+        val x = listOf(
+            "شنبه",
+            "یکشنبه",
+            "دوشنبه",
+            "سه شنبه",
+            "چهارشنبه",
+            "پنجشنبه",
+            "جمعه"
+        )
+
+
+        val data: List<BarParameters> = listOf(
+            BarParameters(
+                dataName = "",
+                data = listOf(20.0, 20.0, 80.0, 60.0, 20.0, 99.0, 20.0),
+                barColor = Color(0xFF6C3428)
+            )
+        )
+
+        when (healthChartInfoType.value) {
+            HealthInfoTypeEnum.BloodOxygen -> {
+                HealthChart(data, x)
+            }
+
+            HealthInfoTypeEnum.BloodPressure -> {
+                HealthChart(data, x)
+            }
+
+            HealthInfoTypeEnum.BodyTemperature -> {
+                HealthChart(data, x)
+            }
+
+            HealthInfoTypeEnum.Weight -> {
+                HealthChart(data, x)
+            }
+        }
 
     }
 
 }
 
 @Composable
-fun BarChart() {
-
-    val testLineParameters: List<LineParameters> = listOf(
-        LineParameters(
-            label = "",
-            data = listOf(20.0, 20.0, 80.0, 60.0, 20.0),
-            lineColor = Color.Gray,
-            lineType = LineType.CURVED_LINE,
-            lineShadow = true,
-        )
-    )
+fun HealthChart(chartData: List<BarParameters>, XAxisData: List<String>) {
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
 
         NeverOverScroll {
+
             Box(
-                Modifier.padding(bottom = 24.dp, start = 16.dp, top = 16.dp, end = 16.dp)
+                Modifier.padding(bottom = 24.dp, start = 16.dp)
                     .fillMaxSize()
             ) {
-                LineChart(
-                    modifier = Modifier.fillMaxSize(),
-                    linesParameters = testLineParameters,
-                    isGrid = false,
-                    gridColor = Color.Blue,
-                    xAxisData = listOf("2015", "2016", "2017", "2018", "2019"),
+                BarChart(
+                    chartParameters = chartData,
+                    spaceBetweenBars = 0.dp,
+                    spaceBetweenGroups = 8.dp,
+                    gridColor = Color.DarkGray,
+                    xAxisData = XAxisData,
+                    isShowGrid = true,
                     animateChart = true,
                     showGridWithSpacer = true,
                     yAxisStyle = TextStyle(
-                        fontSize = 14.sp,
-                        color = Color.Gray,
+                        fontSize = 12.sp,
+                        color = Color.DarkGray,
                     ),
-                    legendPosition = LegendPosition.DISAPPEAR,
                     xAxisStyle = TextStyle(
-                        fontSize = 14.sp,
-                        color = Color.Gray,
-                        fontWeight = FontWeight.W400
+                        fontSize = 12.sp,
+                        color = Color.DarkGray
                     ),
                     yAxisRange = 5,
-                    oneLineChart = false,
-                    gridOrientation = GridOrientation.VERTICAL
+                    legendPosition = LegendPosition.DISAPPEAR,
+                    barCornerRadius = 8.dp,
+                    barWidth = 60.dp
                 )
             }
-        }
-    }
 
-//    val testBarParameters: List<BarParameters> = listOf(
-//        BarParameters(
-//            dataName = "",
-//            data = listOf(20.0, 20.0, 80.0, 60.0, 20.0, 99.0, 20.0),
-//            barColor = Color(0xFF6C3428)
-//        )
-//    )
-//
-//    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-//
-//        NeverOverScroll {
-//
-//            Box(
-//                Modifier.padding(bottom = 16.dp, start = 16.dp, top = 16.dp, end = 16.dp)
-//                    .fillMaxSize()
-//            ) {
-//                BarChart(
-//                    chartParameters = testBarParameters,
-//                    spaceBetweenBars = 0.dp,
-//                    spaceBetweenGroups = 16.dp,
-//                    gridColor = Color.DarkGray,
-//                    xAxisData = listOf(
-//                        "شنبه",
-//                        "یکشنبه",
-//                        "دوشنبه",
-//                        "سه شنبه",
-//                        "چهارشنبه",
-//                        "پنجشنبه",
-//                        "جمعه"
-//                    ),
-//                    isShowGrid = false,
-//                    animateChart = true,
-//                    showGridWithSpacer = false,
-//                    yAxisStyle = TextStyle(
-//                        fontSize = 12.sp,
-//                        color = Color.DarkGray,
-//                    ),
-//                    xAxisStyle = TextStyle(
-//                        fontSize = 12.sp,
-//                        color = Color.DarkGray
-//                    ),
-//                    yAxisRange = 5,
-//                    legendPosition = LegendPosition.DISAPPEAR,
-//                    barCornerRadius = 8.dp,
-//                    barWidth = 60.dp
-//                )
-//            }
-//
-//        }
-//
-//    }
+        }
+
+    }
 
 }
 
