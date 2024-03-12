@@ -2,6 +2,7 @@ package core.main.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,10 +14,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -34,12 +38,18 @@ import com.aay.compose.barChart.model.BarParameters
 import com.aay.compose.baseComponents.model.LegendPosition
 import com.aay.compose.donutChart.model.ChartTypes
 import core.auth.presentation.AuthViewModel
+import core.main.home.domain.model.BloodOxygenModel
+import core.main.home.domain.model.BloodPressureModel
+import core.main.home.domain.model.BodyTemperatureModel
+import core.main.home.domain.model.WeightModel
+import data.base.Loaded
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 import util.component.NeverOverScroll
 import util.helper.state
 import util.theme.primary
+import util.theme.secondary
 import util.theme.textColor
 import util.theme.white
 
@@ -47,10 +57,18 @@ import util.theme.white
 @Composable
 fun HomeScreen(viewModel: HomeViewModel = koinInject()) {
 
-    val state = viewModel.state()
+    val state by viewModel.state()
+
+    val loading = remember { mutableStateOf(true) }
 
     val healthChartInfoType = remember {
         mutableStateOf(HealthInfoTypeEnum.BloodPressure)
+    }
+
+    LaunchedEffect(state.bloodPressureList) {
+        if (state.bloodPressureList is Loaded) {
+            loading.value = false
+        }
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -73,8 +91,7 @@ fun HomeScreen(viewModel: HomeViewModel = koinInject()) {
                 Spacer(Modifier.height(12.dp))
 
                 Text(
-                    text = "هوای خوبیه برای دوییدن نه؟",
-                    color = white
+                    text = "هوای خوبیه برای دوییدن نه؟", color = white
                 )
 
             }
@@ -87,55 +104,74 @@ fun HomeScreen(viewModel: HomeViewModel = koinInject()) {
         }
 
         Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color.LightGray)
-                .padding(12.dp),
+            Modifier.fillMaxWidth().padding(16.dp).clip(RoundedCornerShape(16.dp))
+                .background(Color.LightGray).padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            HealthInfoHeaderItem("فشار خون", true)
-            HealthInfoHeaderItem("اکسیژن خون", false)
-            HealthInfoHeaderItem("وزن", false)
-            HealthInfoHeaderItem("دمای بدن", false)
+            HealthInfoHeaderItem(
+                "فشار خون",
+                healthChartInfoType.value == HealthInfoTypeEnum.BloodPressure
+            ) {
+                healthChartInfoType.value = HealthInfoTypeEnum.BloodPressure
+            }
+            HealthInfoHeaderItem(
+                "اکسیژن خون",
+                healthChartInfoType.value == HealthInfoTypeEnum.BloodOxygen
+            ) {
+                healthChartInfoType.value = HealthInfoTypeEnum.BloodOxygen
+            }
+            HealthInfoHeaderItem(
+                "وزن",
+                healthChartInfoType.value == HealthInfoTypeEnum.Weight
+            ) {
+                healthChartInfoType.value = HealthInfoTypeEnum.Weight
+            }
+            HealthInfoHeaderItem(
+                "دمای بدن",
+                healthChartInfoType.value == HealthInfoTypeEnum.BodyTemperature
+            ) {
+                healthChartInfoType.value = HealthInfoTypeEnum.BodyTemperature
+            }
         }
 
-        val x = listOf(
-            "شنبه",
-            "یکشنبه",
-            "دوشنبه",
-            "سه شنبه",
-            "چهارشنبه",
-            "پنجشنبه",
-            "جمعه"
-        )
+        if (loading.value) {
 
-
-        val data: List<BarParameters> = listOf(
-            BarParameters(
-                dataName = "",
-                data = listOf(20.0, 20.0, 80.0, 60.0, 20.0, 99.0, 20.0),
-                barColor = Color(0xFF6C3428)
-            )
-        )
-
-        when (healthChartInfoType.value) {
-            HealthInfoTypeEnum.BloodOxygen -> {
-                HealthChart(data, x)
+            Box(Modifier.fillMaxSize()) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
 
-            HealthInfoTypeEnum.BloodPressure -> {
-                HealthChart(data, x)
+        } else {
+
+            when (healthChartInfoType.value) {
+                HealthInfoTypeEnum.BloodOxygen -> {
+                    HealthChart(
+                        chartData = healthInfoDataToChart4(state.bloodOxygenList.data),
+                        xAxisData = state.bloodOxygenList.data?.map { it.date } ?: listOf()
+                    )
+                }
+
+                HealthInfoTypeEnum.BloodPressure -> {
+                    HealthChart(
+                        chartData = healthInfoDataToChart3(state.bloodPressureList.data),
+                        xAxisData = state.bloodPressureList.data?.map { it.date } ?: listOf()
+                    )
+                }
+
+                HealthInfoTypeEnum.BodyTemperature -> {
+                    HealthChart(
+                        chartData = healthInfoDataToChart2(state.bodyTemperatureList.data),
+                        xAxisData = state.bodyTemperatureList.data?.map { it.date } ?: listOf()
+                    )
+                }
+
+                HealthInfoTypeEnum.Weight -> {
+                    HealthChart(
+                        chartData = healthInfoDataToChart1(state.weightList.data),
+                        xAxisData = state.weightList.data?.map { it.date } ?: listOf()
+                    )
+                }
             }
 
-            HealthInfoTypeEnum.BodyTemperature -> {
-                HealthChart(data, x)
-            }
-
-            HealthInfoTypeEnum.Weight -> {
-                HealthChart(data, x)
-            }
         }
 
     }
@@ -143,22 +179,21 @@ fun HomeScreen(viewModel: HomeViewModel = koinInject()) {
 }
 
 @Composable
-fun HealthChart(chartData: List<BarParameters>, XAxisData: List<String>) {
+fun HealthChart(chartData: List<BarParameters>, xAxisData: List<String>) {
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
 
         NeverOverScroll {
 
             Box(
-                Modifier.padding(bottom = 24.dp, start = 16.dp)
-                    .fillMaxSize()
+                Modifier.padding(bottom = 24.dp, start = 16.dp).fillMaxSize()
             ) {
                 BarChart(
                     chartParameters = chartData,
                     spaceBetweenBars = 0.dp,
                     spaceBetweenGroups = 8.dp,
                     gridColor = Color.DarkGray,
-                    xAxisData = XAxisData,
+                    xAxisData = xAxisData,
                     isShowGrid = true,
                     animateChart = true,
                     showGridWithSpacer = true,
@@ -167,8 +202,7 @@ fun HealthChart(chartData: List<BarParameters>, XAxisData: List<String>) {
                         color = Color.DarkGray,
                     ),
                     xAxisStyle = TextStyle(
-                        fontSize = 12.sp,
-                        color = Color.DarkGray
+                        fontSize = 12.sp, color = Color.DarkGray
                     ),
                     yAxisRange = 5,
                     legendPosition = LegendPosition.DISAPPEAR,
@@ -184,7 +218,7 @@ fun HealthChart(chartData: List<BarParameters>, XAxisData: List<String>) {
 }
 
 @Composable
-fun HealthInfoHeaderItem(title: String, isSelected: Boolean) {
+fun HealthInfoHeaderItem(title: String, isSelected: Boolean, onClick: () -> Unit) {
     Text(
         title,
         color = if (isSelected) white else textColor,
@@ -192,11 +226,37 @@ fun HealthInfoHeaderItem(title: String, isSelected: Boolean) {
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
             .background(if (isSelected) primary else Color.Transparent)
-            .padding(
-                start = 12.dp,
-                end = 12.dp,
-                top = 8.dp,
-                bottom = 8.dp
-            )
+            .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 8.dp)
+            .clickable {
+                onClick()
+            }
     )
+}
+
+fun healthInfoDataToChart4(data: List<BloodOxygenModel>?): List<BarParameters> {
+    val list = arrayListOf<Double>()
+    data?.map { list.add(it.value.toDouble()) }
+
+    return listOf(BarParameters("", list, secondary))
+}
+
+fun healthInfoDataToChart3(data: List<BloodPressureModel>?): List<BarParameters> {
+    val list = arrayListOf<Double>()
+    data?.map { list.add(it.value.toDouble()) }
+
+    return listOf(BarParameters("", list, secondary))
+}
+
+fun healthInfoDataToChart2(data: List<BodyTemperatureModel>?): List<BarParameters> {
+    val list = arrayListOf<Double>()
+    data?.map { list.add(it.value.toDouble()) }
+
+    return listOf(BarParameters("", list, secondary))
+}
+
+fun healthInfoDataToChart1(data: List<WeightModel>?): List<BarParameters> {
+    val list = arrayListOf<Double>()
+    data?.map { list.add(it.value.toDouble()) }
+
+    return listOf(BarParameters("", list, secondary))
 }
