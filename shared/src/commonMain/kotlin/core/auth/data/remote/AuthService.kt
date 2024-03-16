@@ -16,5 +16,5 @@ interface AuthService {
 
     suspend fun sendCode(number: String): Either<Failure.NetworkFailure, Unit>
 
-    suspend fun signInForm(signInFormOutDto: SignInFormOutDto): Either<Failure.NetworkFailure, Unit>
+    suspend fun signInForm(userDtoOut: UserDtoOut): Either<Failure.NetworkFailure, Unit>
 }

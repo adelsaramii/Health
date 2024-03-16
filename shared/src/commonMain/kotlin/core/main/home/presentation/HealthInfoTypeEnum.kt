@@ -1,4 +1,4 @@
-package core.main.home
+package core.main.home.presentation
 
 enum class HealthInfoTypeEnum {
     BloodOxygen,

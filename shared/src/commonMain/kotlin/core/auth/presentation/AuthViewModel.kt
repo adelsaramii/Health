@@ -1,8 +1,7 @@
 package core.auth.presentation
 
 import com.attendace.leopard.data.base.BaseViewModel
-import core.auth.data.remote.LoginDto
-import core.auth.data.remote.SignInFormOutDto
+import core.auth.data.remote.UserDtoOut
 import core.auth.domain.AuthRepository
 import data.base.Failed
 import data.base.LoadableData
@@ -10,6 +9,7 @@ import data.base.Loaded
 import data.base.Loading
 import data.base.NotLoaded
 import data.remote.Failure
+import di.loge
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.delay
@@ -37,12 +37,10 @@ class AuthViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             delay(3000)
             repository.isLoggedIn().collect { isLogin ->
-                if (!isLogin) {
-                    updateState {
-                        copy(isLogin = isLogin)
-                    }
-                    return@collect
+                updateState {
+                    copy(isLogin = isLogin)
                 }
+                return@collect
             }
         }
     }
@@ -108,10 +106,10 @@ class AuthViewModel(
         }
     }
 
-    fun signInForm(signInFormOutDto: SignInFormOutDto) {
+    fun signInForm(userDtoOut: UserDtoOut) {
         updateState { copy(signInForm = Loading) }
         viewModelScope.launch {
-            repository.signInForm(signInFormOutDto).fold(
+            repository.signInForm(userDtoOut).fold(
                 ifRight = {
                     updateState { copy(signInForm = Loaded(Unit)) }
                 }, ifLeft = {

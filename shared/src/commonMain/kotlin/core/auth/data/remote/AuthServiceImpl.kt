@@ -5,10 +5,8 @@ import data.local.setting.AuthSettings
 import data.remote.ApiClient
 import data.remote.Failure
 import data.remote.makeRequest
-import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpMethod
-import io.ktor.http.Parameters
 import io.ktor.http.URLBuilder
 import io.ktor.http.path
 import kotlinx.coroutines.flow.first
@@ -60,14 +58,14 @@ class AuthServiceImpl(
         }
     }
 
-    override suspend fun signInForm(signInFormOutDto: SignInFormOutDto): Either<Failure.NetworkFailure, Unit> {
+    override suspend fun signInForm(userDtoOut: UserDtoOut): Either<Failure.NetworkFailure, Unit> {
         return apiClient.makeRequest(
             urlBuilder = URLBuilder(
                 authSettings.getBaseUrl().first()
             ).apply { path("api/user/edit") },
             methodType = HttpMethod.Put
         ) {
-            setBody(Json.encodeToString(SignInFormOutDto.serializer(), signInFormOutDto))
+            setBody(Json.encodeToString(UserDtoOut.serializer(), userDtoOut))
         }
     }
 

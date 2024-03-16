@@ -1,4 +1,4 @@
-package core.main.home
+package core.main.home.presentation
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -30,14 +30,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.aay.compose.barChart.BarChart
 import com.aay.compose.barChart.model.BarParameters
 import com.aay.compose.baseComponents.model.LegendPosition
-import com.aay.compose.donutChart.model.ChartTypes
-import core.auth.presentation.AuthViewModel
 import core.main.home.domain.model.BloodOxygenModel
 import core.main.home.domain.model.BloodPressureModel
 import core.main.home.domain.model.BodyTemperatureModel
@@ -186,7 +185,7 @@ fun HealthChart(chartData: List<BarParameters>, xAxisData: List<String>) {
         NeverOverScroll {
 
             Box(
-                Modifier.padding(bottom = 24.dp, start = 16.dp).fillMaxSize()
+                Modifier.padding(bottom = 26.dp , start = 16.dp , end = 16.dp).fillMaxSize()
             ) {
                 BarChart(
                     chartParameters = chartData,
@@ -200,14 +199,17 @@ fun HealthChart(chartData: List<BarParameters>, xAxisData: List<String>) {
                     yAxisStyle = TextStyle(
                         fontSize = 12.sp,
                         color = Color.DarkGray,
+                        textAlign = TextAlign.Center
                     ),
                     xAxisStyle = TextStyle(
-                        fontSize = 12.sp, color = Color.DarkGray
+                        fontSize = 12.sp,
+                        color = Color.DarkGray,
+                        textAlign = TextAlign.Center
                     ),
                     yAxisRange = 5,
                     legendPosition = LegendPosition.DISAPPEAR,
                     barCornerRadius = 8.dp,
-                    barWidth = 60.dp
+                    barWidth = 90.dp
                 )
             }
 

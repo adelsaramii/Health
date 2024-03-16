@@ -1,8 +1,8 @@
 package di
 
 import core.auth.presentation.AuthViewModel
-import core.main.home.HomeViewModel
-import di.viewModelDefinition
+import core.main.home.presentation.HomeViewModel
+import core.main.profile.presentation.ProfileViewModel
 import org.koin.dsl.module
 
 val viewModelModule = module {
@@ -13,6 +13,10 @@ val viewModelModule = module {
 
     viewModelDefinition {
         HomeViewModel(get())
+    }
+
+    viewModelDefinition {
+        ProfileViewModel(get())
     }
 
 }

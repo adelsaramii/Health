@@ -14,7 +14,7 @@ import io.github.xxfast.decompose.router.rememberRouter
 @Composable
 fun BaseScreen() {
     val baseRouter: Router<BaseNavigation> =
-        rememberRouter(BaseNavigation::class, stack = listOf(BaseNavigation.Main))
+        rememberRouter(BaseNavigation::class, stack = listOf(BaseNavigation.Splash))
 
     val mainChild: Router<MainNavigation> =
         rememberRouter(MainNavigation::class, stack = listOf(MainNavigation.Home))

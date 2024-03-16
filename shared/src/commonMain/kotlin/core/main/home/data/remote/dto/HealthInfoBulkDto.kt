@@ -5,6 +5,7 @@ import core.main.home.domain.model.BloodPressureModel
 import core.main.home.domain.model.BodyTemperatureModel
 import core.main.home.domain.model.WeightModel
 
+@kotlinx.serialization.Serializable
 data class HealthInfoBulkDto(
     var weightList: List<WeightModel> = listOf(),
     var bloodOxygenList: List<BloodOxygenModel> = listOf(),

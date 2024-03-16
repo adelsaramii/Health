@@ -51,8 +51,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import core.auth.data.remote.GenderEnum
-import core.auth.data.remote.SignInFormOutDto
+import core.auth.data.remote.UserDtoOut
+import core.main.profile.data.remote.dto.UserGender
 import data.base.Loaded
 import data.base.Loading
 import kotlinx.collections.immutable.toImmutableList
@@ -96,7 +96,7 @@ fun AuthScreen(
         mutableStateOf(false)
     }
 
-    val selectedGender = remember { mutableStateOf(GenderEnum.Male) }
+    val selectedGender = remember { mutableStateOf(UserGender.Male) }
 
     LaunchedEffect(state.validateCodeResponse) {
         if (state.validateCodeResponse is Loaded) {
@@ -215,15 +215,12 @@ fun AuthScreen(
                     selectedGender
                 )
 
-                Spacer(Modifier.height(16.dp))
-
                 HealthSignUpForm(
-                    title = "",
                     message = "",
                     buttonLoading = state.signInForm is Loading,
                     onLoginButtonClick = { name, nationalCode, height, age, address, password ->
                         viewModel.signInForm(
-                            SignInFormOutDto(
+                            UserDtoOut(
                                 name = name,
                                 nationalCode = nationalCode,
                                 height = height,
@@ -753,7 +750,6 @@ fun HealthValidateCode(
 )
 @Composable
 fun HealthSignUpForm(
-    title: String,
     message: String,
     buttonLoading: Boolean,
     onLoginButtonClick: (String, String, Int, Int, String, String) -> Unit,
@@ -1012,7 +1008,6 @@ fun HealthSignUpForm(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
 
             Form(
                 fields = fieldsData.toImmutableList(), modifier = Modifier.fillMaxWidth()
@@ -1076,23 +1071,22 @@ fun HealthSignUpForm(
 }
 
 @Composable
-fun HealthGenderRadio(gender: (GenderEnum) -> Unit, selectedGender: State<GenderEnum>) {
-
-    Column {
+fun HealthGenderRadio(gender: (UserGender) -> Unit, selectedGender: State<UserGender>) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         RadioButton(
-            selected = selectedGender.value == GenderEnum.Male,
+            selected = selectedGender.value == UserGender.Male,
             onClick = {
-                gender(GenderEnum.Male)
+                gender(UserGender.Male)
             }
         )
-        Text("مرد")
+        Text("مرد", textAlign = TextAlign.Center)
 
         RadioButton(
-            selected = selectedGender.value == GenderEnum.Female,
+            selected = selectedGender.value == UserGender.Female,
             onClick = {
-                gender(GenderEnum.Female)
+                gender(UserGender.Female)
             }
         )
-        Text("زن")
+        Text("زن", textAlign = TextAlign.Center)
     }
 }

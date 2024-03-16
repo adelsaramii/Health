@@ -12,7 +12,7 @@ class HomeRepositoryImpl(
 ) : HomeRepository {
 
     override suspend fun healthInfoBulk(): Either<Failure, HealthInfoBulkDto> {
-        return  homeService.healthInfoBulk()
+        return homeService.healthInfoBulk()
     }
 
 }

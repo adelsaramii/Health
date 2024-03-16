@@ -3,7 +3,7 @@ package core.auth.data
 import arrow.core.Either
 import core.auth.data.remote.AuthService
 import core.auth.data.remote.LoginDto
-import core.auth.data.remote.SignInFormOutDto
+import core.auth.data.remote.UserDtoOut
 import core.auth.domain.AuthRepository
 import data.local.setting.AuthSettings
 import data.remote.Failure
@@ -52,7 +52,7 @@ class AuthRepositoryImpl(
         authSetting.setLoggedIn(loggedIn)
     }
 
-    override suspend fun signInForm(signInFormOutDto: SignInFormOutDto): Either<Failure, Unit> {
-        return  authService.signInForm(signInFormOutDto)
+    override suspend fun signInForm(userDtoOut: UserDtoOut): Either<Failure, Unit> {
+        return  authService.signInForm(userDtoOut)
     }
 }

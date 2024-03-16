@@ -1,23 +1,17 @@
-package core.main.home
+package core.main.home.presentation
 
 import com.attendace.leopard.data.base.BaseViewModel
-import core.auth.data.remote.LoginDto
-import core.auth.data.remote.SignInFormOutDto
-import core.auth.domain.AuthRepository
 import core.main.home.domain.HomeRepository
 import core.main.home.domain.model.BloodOxygenModel
 import core.main.home.domain.model.BloodPressureModel
 import core.main.home.domain.model.BodyTemperatureModel
 import core.main.home.domain.model.WeightModel
-import data.base.Failed
 import data.base.LoadableData
 import data.base.Loaded
-import data.base.Loading
 import data.base.NotLoaded
 import data.remote.Failure
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class HomeViewModel(

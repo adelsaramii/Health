@@ -6,6 +6,8 @@ import core.auth.data.remote.AuthService
 import core.auth.data.remote.AuthServiceImpl
 import core.main.home.data.remote.HomeService
 import core.main.home.data.remote.HomeServiceImpl
+import core.main.profile.data.remote.ProfileService
+import core.main.profile.data.remote.ProfileServiceImpl
 import data.local.setting.AuthSettings
 import data.local.setting.AuthSettingsImpl
 import data.remote.ApiClient
@@ -35,6 +37,10 @@ val dataModule = module {
 
     single<HomeService> {
         HomeServiceImpl(get() , get())
+    }
+
+    single<ProfileService> {
+        ProfileServiceImpl(get() , get())
     }
 
     // endregion
